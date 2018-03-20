@@ -1,0 +1,29 @@
+{
+  "name": "WvR",
+  "version": "1.0.0",
+  "description": "Web version of Dr.White v.s. R virus",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js"
+  },
+  "engines": {
+    "node": "6.11.2"
+  },
+  "author": "Ting An Yen",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.15.2",
+    "crypto-js": "^3.1.9-1",
+    "express": "^4.14.0",
+    "helmet": "^3.3.0",
+    "mongoose": "^4.7.6",
+    "path": "^0.12.7",
+    "socket.io": "^2.0.3",
+    "uuid": "^3.2.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:DanTNC/WvR.git"
+  }
+}

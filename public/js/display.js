@@ -1,0 +1,2 @@
+var Display = new function(){
+};

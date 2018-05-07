@@ -35,6 +35,8 @@ io.on("connection", function(socket){
     
     console.log('connected');
     
+    socket.emit("hi");
+    
     // connection initialization
     
     socket.on('disconnect', function(){
@@ -42,14 +44,32 @@ io.on("connection", function(socket){
     });
     
     socket.on('new_room', function(num_player){
+        console.log(num_player);
         let game_id = uuid();
-        Games[game_id] = new Game(num_player);
-        socket.emit('room_newed', game_id);
+        try{
+            Games[game_id] = new Game(num_player, game_id);
+            socket.emit('room_newed', game_id);
+            console.log('room', game_id, 'has been created');
+        }catch(err){
+            socket.emit('error_', 'num_player', 'num_player should be in [6, 10]');
+        }
     });
     
     socket.on('join_game', function(game_id, name){
         socket.join(game_id, function(){
-            Games[game_id].join_game(socket, name);
+            if(Games[game_id]){
+                try{
+                    Games[game_id].join_game(socket, name);
+                    socket.emit('joined');
+                }catch(err){
+                    console.log(err);
+                    console.error('room', game_id, 'is already full');
+                    socket.emit('fatalerror', 'full room');
+                }
+            }else{
+                console.error('room', game_id, 'doesn\'t exist');
+                socket.emit('fatalerror', 'invalid room id');
+            }
         });
     });
     
@@ -58,12 +78,5 @@ io.on("connection", function(socket){
 });
 
 // event emitters
-
-var clientIDs = (io)=>{
-    // io.of('/').clients((error, clients)=>{
-    //     if(error) throw error;
-    //     console.log(clients);
-    // });
-};
 
 // helpers

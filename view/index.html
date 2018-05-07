@@ -11,6 +11,7 @@
     <link rel='stylesheet' href="css/style.css">
     <script src="/socket.io/socket.io.js"></script>
     <script type="text/javascript" src="js/socketio.js"></script>
+    <script type="text/javascript" src="js/roulette.min.js"></script>
     <script type="text/javascript" src="js/dice.js"></script>
     <script type="text/javascript" src="js/div_.js"></script>
     <script type="text/javascript" src="js/phaser_.js"></script>
@@ -19,7 +20,14 @@
 </head>
 
 <body>
-    <div id="area"></div>
+    <div id="area" style="display:inline;"></div>
+    <div class="roulette" style="display:none;"> 
+    	<img id="r0" src="img/roulette_test/star.png"/>
+    	<img id="r1" src="img/roulette_test/flower.png"/>
+    	<img id="r2" src="img/roulette_test/coin.png"/>
+    	<img id="r3" src="img/roulette_test/mshroom.png"/>
+    	<img id="r4" src="img/roulette_test/chomp.png"/>
+    </div> 
 </body>
 
 </html>

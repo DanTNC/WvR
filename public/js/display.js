@@ -1,5 +1,21 @@
 /* global $ */
+var r_option = {
+    speed : 10,
+    duration : 3,
+    stopImageNumber : -1,
+    startCallback : function() {
+        console.log('start');
+    },
+    slowDownCallback : function() {
+        console.log('slowDown');
+    },
+    stopCallback : function($stopElm) {
+        console.log('stop', $($stopElm).attr("id").replace('r',''));
+    }
+};
+
 var Display = new function(){
+    this.roulettes = [];
     this.fatalerror = () => {
         alert("Something's wrong! Please retry");
     };
@@ -27,5 +43,31 @@ var Display = new function(){
         $("#create").click(function(){
             callback($("#num_player").val());
         });
-    }
+    };
+    this.roulette = (target, imageSet, callback) => {
+        r_option.stopCallback = callback;
+        this.initImageSet(target, imageSet);
+        if(this.roulettes.includes(target)){
+            $(target).roulette('option', r_option).roulette('start');
+        }else{
+            $(target).roulette(r_option).roulette('start');
+            this.roulette.append(target);
+        }
+    };
+    this.initImageSet = (target, imageSet) => {
+        $.getJSON('json/rouletteImg.json', {}, function(json){
+            if(json[imageSet]){
+                $(target).html("");
+                for(let img of json[imageSet]){
+                    $(target).append("<img src='" + img + "'></img>");
+                }
+            }else{
+                console.error("Specified image set doesn't exist!");
+                throw true;
+            }
+        });
+    };
+    this.rouletteStopWrapper = ($stopElem) => {
+        return $($stopElem).attr('id').replace('r', '');
+    };
 };

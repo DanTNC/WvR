@@ -46,21 +46,25 @@ var Display = new function(){
     };
     this.roulette = (target, imageSet, callback) => {
         r_option.stopCallback = callback;
-        this.initImageSet(target, imageSet);
-        if(this.roulettes.includes(target)){
-            $(target).roulette('option', r_option).roulette('start');
-        }else{
-            $(target).roulette(r_option).roulette('start');
-            this.roulette.append(target);
-        }
+        let self = this;
+        this.initImageSet(target, imageSet, function(){
+            if(self.roulettes.includes(target)){
+                $(target).roulette('option', r_option).roulette('start');
+            }else{
+                $(target).roulette(r_option).roulette('start');
+                self.roulettes.push(target);
+            }
+        });
     };
-    this.initImageSet = (target, imageSet) => {
+    this.initImageSet = (target, imageSet, callback) => {
         $.getJSON('json/rouletteImg.json', {}, function(json){
             if(json[imageSet]){
                 $(target).html("");
+                var i = 0;
                 for(let img of json[imageSet]){
-                    $(target).append("<img src='" + img + "'></img>");
+                    $(target).append("<img src='" + img + "' id='r" + i + "'></img>");
                 }
+                callback();
             }else{
                 console.error("Specified image set doesn't exist!");
                 throw true;

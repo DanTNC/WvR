@@ -36,7 +36,7 @@ var Display = new function(){
         $("body").html("waiting for other players...");
     };
     this.char = (chars, callback) => {
-        //
+        console.log(chars);
     };
     this.createRoom = (callback) => {
         $("#area").html("").append("<label for='num'>number of players</label><input name='num' id='num_player'></input><button id='create'>create</button>");

@@ -7,6 +7,8 @@ const GAME = 2;
 // parameter consts
 const BOSSES = 2;
 
+var CharacterJs = require("./character.js");
+
 class Core {
     constructor(game){
         this.game = game;
@@ -36,7 +38,7 @@ class Core {
             "char": function(params){
                 let play = params[0];
                 let char = params[1];
-                return play < this.num_player || char instanceof Character;
+                return play < this.num_player || char instanceof CharacterJs.Character;
             },
             "bribe": function(params){
                 let boss = params[0];
@@ -98,7 +100,7 @@ class Game {
         this.readyQ = [];
         this.readyN = 0;
         this.next_stage = ()=>{};
-        this.characters = [];
+        this.characters = CharacterJs.character_set;
     }
     allready(){
         for (let i = 0; i < this.readyN; i++){

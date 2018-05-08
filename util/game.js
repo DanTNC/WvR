@@ -7,48 +7,69 @@ const GAME = 2;
 // parameter consts
 const BOSSES = 2;
 
-var core = {
-    "char": function(params){
-        if (this.state != CHAR) return;
-        let play = params[0];
-        let char = params[1];
-        this.players[play].character = char;
-    },
-    "bribe": function(params){
-        if (this.state != BRIBE) return;
-        let boss = params[0];
-        let survivors = params[1];
-        for(let sur of survivors){
-            this.bribe(boss, sur);
-        }
-        if(this.first_bribe !== undefined){
-            this.get_Boss(!this.first_bribe).socket.emit("bribe");
-            this.first_bribe = undefined;
-        }else{
-            this.game_stage();
+class Core {
+    constructor(game){
+        this.game = game;
+        this.core = {
+            "char": function(params){
+                if (this.state != CHAR) return;
+                let play = params[0];
+                let char = params[1];
+                this.players[play].character = char;
+            },
+            "bribe": function(params){
+                if (this.state != BRIBE) return;
+                let boss = params[0];
+                let survivors = params[1];
+                for(let sur of survivors){
+                    this.bribe(boss, sur);
+                }
+                if(this.first_bribe !== undefined){
+                    this.get_Boss(!this.first_bribe).socket.emit("bribe");
+                    this.first_bribe = undefined;
+                }else{
+                    this.game_stage();
+                }
+            }
+        };
+        this.core_valid = {
+            "char": function(params){
+                let play = params[0];
+                let char = params[1];
+                return play < this.num_player || char instanceof Character;
+            },
+            "bribe": function(params){
+                let boss = params[0];
+                let survivors = params[1];
+                var valid;
+                if(this.first_bribe !== undefined){
+                    valid = boss == this.first_bribe;
+                }else{
+                    valid = boss < BOSSES;
+                }
+                valid = valid && (survivors < this.num_player || survivors >= BOSSES);
+                return valid;
+            }
+        };
+    }
+    preAct(op, params){
+        if (!((this.core_valid[op].bind(this.game))(params))){
+            throw true;
         }
     }
-};
-
-var core_valid = {
-    "char": function(params){
-        let play = params[0];
-        let char = params[1];
-        return play < this.num_player || char instanceof Character;
-    },
-    "bribe": function(params){
-        let boss = params[0];
-        let survivors = params[1];
-        var valid;
-        if(this.first_bribe !== undefined){
-            valid = boss == this.first_bribe;
-        }else{
-            valid = boss < BOSSES;
-        }
-        valid = valid && (survivors < this.num_player || survivors >= BOSSES);
-        return valid;
+    postAct(op, params, play){
+        this.game.check_and_trigger(play);
     }
-};
+    doAct(op, params, play){
+        try{
+            this.preAct(op, params);
+            (this.core[op].bind(this.game))(params);
+            this.postAct(op, params, play);
+        }catch(err){
+            console.error("invalid operation or params received");
+        }
+    }
+}
 
 var shuffle = (list)=>{//shuffle a list
     var len = list.length;
@@ -69,8 +90,7 @@ class Game {
         this.sockets = [];
         this.players = [];
         this.first_bribe = undefined;
-        this.core = core;
-        this.core_valid = core_valid;
+        this.core = new Core(this);
         this.state = INIT;
         this.dice = [];
         this.event_cards = [];
@@ -149,7 +169,7 @@ class Game {
         });
     }
     join_game(socket, name){
-        if(this.sockets.length > this.num_player){
+        if(this.sockets.length == this.num_player){
             throw true;
         }
         this.register_callbacks(socket);
@@ -176,22 +196,23 @@ class Game {
             survivor.team = boss.team;
         }
     }
-    preAct(op, params){
-        if (!((this.core_valid[op].bind(this))(params))){
-            throw true;
-        }
-    }
-    postAct(op, params, play){
-        this.check_and_trigger(play);
-    }
+    // preAct(op, params){
+    //     if (!((this.core_valid[op].bind(this))(params))){
+    //         throw true;
+    //     }
+    // }
+    // postAct(op, params, play){
+    //     this.check_and_trigger(play);
+    // }
     doAct(op, params, play){
-        try{
-            this.preAct(op, params);
-            (this.core[op].bind(this))(params);
-            this.postAct(op, params, play);
-        }catch(err){
-            console.error("invalid operation or params received");
-        }
+        // try{
+        //     this.preAct(op, params);
+        //     (this.core[op].bind(this))(params);
+        //     this.postAct(op, params, play);
+        // }catch(err){
+        //     console.error("invalid operation or params received");
+        // }
+        this.core.doAct(op, params, play);
     }
 }
 
@@ -251,10 +272,6 @@ class Survivor extends Player {
     give(){
         
     }
-}
-
-class Character {
-    
 }
 
 module.exports = Game;

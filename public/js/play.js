@@ -1,13 +1,16 @@
 /* global socket Display $ */
 
-// var game_id = window.location.pathname.replace("/play/","");
-// var my_play_id = undefined;
+var test_join = (num) => {
+    for(let i = 0; i < num; i++){
+        socket.emit("join_game", infos.game_id, "a");
+    }
+};
+
+var infos = {
+    game_id: window.location.pathname.replace("/play/","")
+};
 
 $(document).ready(function(){
-    var infos = {
-        game_id: window.location.pathname.replace("/play/","")
-    };
-    
     Display.getName(function(name){
         socket.emit("join_game", infos.game_id, name);
     });

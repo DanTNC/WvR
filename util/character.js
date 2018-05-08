@@ -13,7 +13,7 @@ class SkillTree {
     buildTree(){
         for(let node of this.nodes){
             if(node && node.parentnode != -1){
-                this.nodes[node.parentnode].childrenAdd(this.nodes[node.id]);
+                this.nodes[node.parentnode].childrenAdd(node.id);
             }
         }
     }

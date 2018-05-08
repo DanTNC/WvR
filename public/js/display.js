@@ -27,7 +27,7 @@ var Display = new function(){
         }
     };
     this.getName = (callback) => {
-        $("body").html("").append("<input id='name'></input>").append("<button id='submit'>submit</button>");
+        $("body").html("").append("<label for='name'>your name</label><input name='name' id='name'></input>").append("<button id='submit'>submit</button>");
         $("#submit").click(function(){
             callback($("#name").val());
         });
@@ -36,7 +36,8 @@ var Display = new function(){
         $("body").html("waiting for other players...");
     };
     this.char = (chars, callback) => {
-        console.log(chars);
+        //show two chars to choose
+        //on choose fire callback with chosen char
     };
     this.createRoom = (callback) => {
         $("#area").html("").append("<label for='num'>number of players</label><input name='num' id='num_player'></input><button id='create'>create</button>");

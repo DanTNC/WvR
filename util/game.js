@@ -144,7 +144,7 @@ class Game {
     get_char_group(){// shuffle the character pool and retrieve <num_player> groups of two character
         shuffle(this.characters);
         var char_group = [];
-        for (let i = 0; i < this.num_player; i+=2){
+        for (let i = 0; i < (this.num_player-2)*2; i+=2){
             char_group.push(this.characters.slice(i, i+2));
         }
         return char_group;
@@ -153,9 +153,8 @@ class Game {
         this.stage_start(CHAR);
         console.log('Game starts in ', this.game_id, '!! stage: choose character');
         var char_group = this.get_char_group();
-        console.log(char_group[0]);
-        for (let i = 0; i < this.num_player; i++){
-            this.players[i].socket.emit("char", i, char_group[i]);
+        for (let i = 2; i < this.num_player; i++){
+            this.players[i].socket.emit("char", i, char_group[i-2]);
         }
         this.wait_for(this.bribe_stage, BOSSES);
     }

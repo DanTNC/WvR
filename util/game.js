@@ -10,17 +10,16 @@ const BOSSES = 2;
 var CharacterJs = require("./character.js");
 
 class Core {
-    constructor(game){
+    constructor(game, statedict){
         this.game = game;
+        this.state = statedict;
         this.core = {
             "char": function(params){
-                if (this.state != CHAR) return;
                 let play = params[0];
                 let char = params[1];
                 this.players[play].character = char;
             },
             "bribe": function(params){
-                if (this.state != BRIBE) return;
                 let boss = params[0];
                 let survivors = params[1];
                 for(let sur of survivors){
@@ -47,14 +46,15 @@ class Core {
                 if(this.first_bribe !== undefined){
                     valid = boss == this.first_bribe;
                 }else{
-                    valid = boss < BOSSES;
+                    valid = boss < 2;
                 }
-                valid = valid && (survivors < this.num_player || survivors >= BOSSES);
+                valid = valid && (survivors < this.num_player || survivors >= 2);
                 return valid;
             }
         };
     }
     preAct(op, params){
+        if (this.game.state !== this.state[op]) throw true;
         if (!((this.core_valid[op].bind(this.game))(params))){
             throw true;
         }
@@ -92,7 +92,10 @@ class Game {
         this.sockets = [];
         this.players = [];
         this.first_bribe = undefined;
-        this.core = new Core(this);
+        this.core = new Core(this, {
+            "char": CHAR,
+            "bribe": BRIBE
+        });
         this.state = INIT;
         this.dice = [];
         this.event_cards = [];
@@ -150,6 +153,7 @@ class Game {
         this.stage_start(CHAR);
         console.log('Game starts in ', this.game_id, '!! stage: choose character');
         var char_group = this.get_char_group();
+        console.log(char_group[0]);
         for (let i = 0; i < this.num_player; i++){
             this.players[i].socket.emit("char", i, char_group[i]);
         }
@@ -223,6 +227,7 @@ class Player {
         this.name = name;
         this.team = "";
         this.socket = socket;
+        this.character = undefined;
     }
     win(){
         

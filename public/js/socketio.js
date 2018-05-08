@@ -29,6 +29,7 @@ socket.on("hi", function(){//check connection
 
 socket.on("char", function(play_id, chars){
     infos.play_id = play_id;
+    console.log(chars);
     Display.char(chars, function(char){
         socket.emit("act", "char", [play_id, char], infos.play_id);
     });

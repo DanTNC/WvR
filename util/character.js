@@ -5,7 +5,7 @@ class SkillTree {
     }
     parseTree(tree){
         for(let node of tree.split("\n")){
-            if(node == "") continue;
+            if(node == "" || node[0] == "#") continue;
             new SkillNode(node, this);
         }
         this.buildTree();

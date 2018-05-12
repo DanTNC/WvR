@@ -61,6 +61,7 @@ io.on("connection", function(socket){
                 try{
                     Games[game_id].join_game(socket, name);
                     socket.emit('joined');
+                    Games[game_id].check_and_start();
                 }catch(err){
                     console.log(err);
                     console.error('room', game_id, 'is already full');

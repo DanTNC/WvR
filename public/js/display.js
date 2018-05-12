@@ -29,15 +29,37 @@ var Display = new function(){
     this.getName = (callback) => {
         $("body").html("").append("<label for='name'>your name</label><input name='name' id='name'></input>").append("<button id='submit'>submit</button>");
         $("#submit").click(function(){
+            window.open(window.location.href);
             callback($("#name").val());
         });
     };
-    this.wait = () => {
-        $("body").html("waiting for other players...");
+    this.wait = (forwhat) => {
+        $("body").html("waiting for other players to " + forwhat + "...");
     };
     this.char = (chars, callback) => {
-        //show two chars to choose
-        //on choose fire callback with chosen char
+        $("body").html("").append("<button data-char=0>" + chars[0].CHname + "</button><button data-char=1>" + chars[1].CHname + "</button>");
+        $("button").click(function(){
+            var choice = Number($(this).data("char"));
+            callback(chars[choice]);
+            $("body").html("You have chosen " + chars[choice].CHname);
+        });
+    };
+    this.bribe = (surs, callback) => {
+        $("body").html("");
+        for(let suridx in surs){
+            $("body").append("<button data-bribe=" + suridx + ">" + surs[suridx].CHname + "</button>");
+        }
+        var bribed = 0;
+        var bribed_surs = [];
+        $("button").click(function(){
+            var choice = Number($(this).data("bribe"));
+            bribed++;
+            $(`button[data-bribe=${choice}]`).prop("disabled", true);
+            bribed_surs.push(surs[choice].id);
+            if(bribed == 2){
+                callback(bribed_surs);
+            }
+        });
     };
     this.createRoom = (callback) => {
         $("#area").html("").append("<label for='num'>number of players</label><input name='num' id='num_player'></input><button id='create'>create</button>");

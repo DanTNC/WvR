@@ -18,6 +18,7 @@ class Core {
                 let play = params[0];
                 let char = params[1];
                 this.players[play].character = char;
+                console.log(`Player ${play} chooses ${char.CHname}`);
             },
             "bribe": function(params){
                 let boss = params[0];
@@ -26,11 +27,11 @@ class Core {
                     this.bribe(boss, sur);
                 }
                 if(this.first_bribe !== undefined){
-                    this.get_Boss(!this.first_bribe).socket.emit("bribe");
+                    this.get_Boss(!this.first_bribe).socket.emit("bribe", (this.first_bribe)? 0: 1, this.get_Survivors());
+                    this.players[(this.first_bribe)? 1: 0].socket.emit("wait", "bribe survivors");
                     this.first_bribe = undefined;
-                }else{
-                    this.game_stage();
                 }
+                console.log(`Boss ${boss} bribes ${this.players[survivors[0]].character.CHname} and ${this.players[survivors[1]].character.CHname}`);
             }
         };
         this.core_valid = {
@@ -68,12 +69,13 @@ class Core {
             (this.core[op].bind(this.game))(params);
             this.postAct(op, params, play);
         }catch(err){
-            console.error("invalid operation or params received");
+            console.error(`invalid operation or params received ${op}, ${params}, ${play}`);
+            console.error(err.message);
         }
     }
 }
 
-var shuffle = (list)=>{//shuffle a list
+var shuffle = (list)=>{// shuffle a list
     var len = list.length;
     for(let i in list){
         var dest = Math.floor(Math.random() * len);
@@ -83,7 +85,7 @@ var shuffle = (list)=>{//shuffle a list
 
 class Game {
     constructor(num_player, game_id){
-        if(num_player < 6 || num_player > 10){
+        if(num_player < 6 || num_player > 10 || isNaN(num_player)){
             console.error("num_player out of range");
             throw true;
         }
@@ -115,27 +117,36 @@ class Game {
     }
     check_and_trigger(play){
         this.readyQ[play] = true;
+        var self = this;
         if (this.allready()){
-            this.next_stage();
+            setTimeout(function() {self.next_stage();});
         }
     }
     stage_start(stage){
         this.state = stage;
         this.next_stage = ()=>{};
     }
-    wait_for(stage, cand){// cand: candidate (optional)
-        this.empty_readyQ(cand);
+    wait_for(stage, cand, excl){// cand: candidate (optional), excl: exclude (optional)
+        this.empty_readyQ(cand, excl);
         this.next_stage = stage;
     }
-    empty_readyQ(cand){
-        var limit = cand || this.num_player;
-        this.readyN = limit;
-        for (let i = 0; i < limit; i++){
+    empty_readyQ(cand, excl){
+        var uplimit = cand || this.num_player;
+        this.readyN = uplimit;
+        var lowlimit = excl || 0;
+        for (let i = 0; i < lowlimit; i++){
+            this.readyQ[i] = true;
+        }
+        for (let i = lowlimit; i < uplimit; i++){
             this.readyQ[i] = false;
         }
     }
     get_Boss(W_R){
-        return this.players[W_R? 1: 0];
+        return this.players[(W_R? 1: 0)];
+    }
+    get_Survivors(){
+        var survivors = this.players.slice(BOSSES);
+        return survivors.map((ele) => {return {"CHname": ele.character.CHname, "id": ele.id}});
     }
     play(){
         this.beforeStart();// add players into the game (career decided)
@@ -153,33 +164,47 @@ class Game {
         this.stage_start(CHAR);
         console.log('Game starts in ', this.game_id, '!! stage: choose character');
         var char_group = this.get_char_group();
+        for (let i = 0; i < BOSSES; i++){
+            this.players[i].socket.emit("wait", "choose character");
+        }
         for (let i = 2; i < this.num_player; i++){
             this.players[i].socket.emit("char", i, char_group[i-2]);
         }
-        this.wait_for(this.bribe_stage, BOSSES);
+        this.wait_for(this.bribe_stage, undefined, BOSSES);
     }
     bribe_stage(){// bosses take turns bribing survivors, next->game
         this.stage_start(BRIBE);
+        for (let i = BOSSES; i < this.num_player; i++){
+            this.players[i].socket.emit("wait", "bribe survivors");
+        }
         console.log(this.game_id, ' stage: bribing survivors');
         var first = Math.random() > 0.5;
-        this.get_Boss(first).socket.emit("bribe");
+        this.get_Boss(first).socket.emit("bribe", (first? 1: 0), this.get_Survivors());
+        this.players[(first? 0: 1)].socket.emit("wait", "bribe survivors");
         this.first_bribe = first;
+        this.wait_for(this.game_stage, BOSSES);
     }
     game_stage(){
         this.stage_start(GAME);
+        for (let i = 0; i < this.num_player; i++){
+            this.players[i].socket.emit("wait", "make the programer work");
+        }
     }
     register_callbacks(socket){
+        var self = this;
         socket.on("act", function(op, params, play){
-            this.doAct(op, params, play);
+            self.doAct(op, params, play);
         });
     }
     join_game(socket, name){
-        if(this.sockets.length == this.num_player){
+        if(this.sockets.length >= this.num_player){
             throw true;
         }
         this.register_callbacks(socket);
         console.log(name, 'join room', this.game_id);
         this.sockets.push({socket: socket, name: name});
+    }
+    check_and_start(){
         if(this.sockets.length == this.num_player){
             this.play();
         }
@@ -189,10 +214,11 @@ class Game {
         this.add_player(this.sockets.slice(0, 2), this.sockets.slice(2));
     }
     add_player(Bosses, Players){
-        this.players[0] = new R_Virus(Bosses[0].name, Bosses[0].socket);
-        this.players[1] = new Dr_White(Bosses[1].name, Bosses[1].socket);
-        for(let ply of Players){
-            this.players.push(new Survivor(ply.name, ply.socket));
+        this.players[0] = new R_Virus(Bosses[0].name, Bosses[0].socket, 0);
+        this.players[1] = new Dr_White(Bosses[1].name, Bosses[1].socket, 1);
+        for(let plyidx in Players){
+            var ply = Players[plyidx];
+            this.players.push(new Survivor(ply.name, ply.socket, Number(plyidx) + 2));
         }
     }
     bribe(boss, sur){
@@ -201,32 +227,18 @@ class Game {
             survivor.team = boss.team;
         }
     }
-    // preAct(op, params){
-    //     if (!((this.core_valid[op].bind(this))(params))){
-    //         throw true;
-    //     }
-    // }
-    // postAct(op, params, play){
-    //     this.check_and_trigger(play);
-    // }
     doAct(op, params, play){
-        // try{
-        //     this.preAct(op, params);
-        //     (this.core[op].bind(this))(params);
-        //     this.postAct(op, params, play);
-        // }catch(err){
-        //     console.error("invalid operation or params received");
-        // }
         this.core.doAct(op, params, play);
     }
 }
 
 class Player {
-    constructor(name, socket){
+    constructor(name, socket, id){
         this.name = name;
         this.team = "";
         this.socket = socket;
         this.character = undefined;
+        this.id = id;
     }
     win(){
         
@@ -261,15 +273,15 @@ class Boss extends Player {
 }
 
 class Dr_White extends Boss {
-    constructor(name, socket){
-        super(name, socket);
+    constructor(name, socket, id){
+        super(name, socket, id);
         this.team = "doctor";
     }
 }
 
 class R_Virus extends Boss {
-    constructor(name, socket){
-        super(name, socket);
+    constructor(name, socket, id){
+        super(name, socket, id);
         this.team = "virus";
     }
 }

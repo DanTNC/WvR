@@ -19,12 +19,16 @@ socket.on("room_newed", function(game_id){
 });
 
 socket.on("joined", function(){
-    Display.wait();
+    Display.wait("join");
     console.log('game joined');
 });
 
 socket.on("hi", function(){//check connection
     console.log("hi");
+});
+
+socket.on("wait", function(forwhat){
+    Display.wait(forwhat);
 });
 
 socket.on("char", function(play_id, chars){
@@ -35,9 +39,10 @@ socket.on("char", function(play_id, chars){
     });
 });
 
-socket.on("bribe", function(){
+socket.on("bribe", function(play_id, surs){
+    infos.play_id = play_id;
     if(infos.play_id < 2){// if Boss
-        Display.bribe(function(survivors){
+        Display.bribe(surs, function(survivors){
             socket.emit("act", "bribe", [infos.play_id, survivors], infos.play_id);
         });
     }

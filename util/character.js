@@ -25,7 +25,6 @@ class SkillNode {
         this.children = [];
     }
     parseNode(node, tree){
-        // console.log(node);
         var args = node.replace(/\s/g, "").split(";");
         this.id = args[0];
         this.parentnode = args[1];
@@ -41,11 +40,12 @@ class SkillNode {
 }
 
 class Skill {
-    constructor(skill){
-        this.parseSkill(skill);
+    constructor(skill, Set){
+        this.parseSkill(skill, Set);
     }
-    parseSkill(skill){
-        
+    parseSkill(skill, Set){
+        // gets id and args
+        Set.skill_set[this.id] = this;
     }
 }
 
@@ -65,10 +65,17 @@ var CharacterJs = {
 var fs = require("fs");
 var charSet = fs.readFileSync(__dirname + "/character_set.gd", "utf8");
 charSet = charSet.split("$");
-charSet.shift();
+charSet.shift();// the first one must be a comment
 for(let char of charSet){
     var break_ = char.indexOf("\n");
     CharacterJs.character_set.push(new CharacterJs.Character(char.slice(0, break_), char.slice(break_)));
+}
+var skillSet = fs.readFileSync(__dirname + "/skill_set.gd", "utf8");
+skillSet = skillSet.split("\n");
+skillSet.shift();// the first line must be a comment
+for(let skill of skillSet){
+    if(skill[0] == "#") continue;
+    new Skill(skill, CharacterJs);
 }
 
 module.exports = CharacterJs;

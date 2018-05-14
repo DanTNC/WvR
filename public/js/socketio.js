@@ -1,4 +1,4 @@
-/* global io Display infos */
+/* global io Display infos consts*/
 
 var socket = io();
 // socket connection
@@ -42,10 +42,29 @@ socket.on("char", function(play_id, chars){
 socket.on("bribe", function(play_id, surs){
     infos.play_id = play_id;
     if(infos.play_id < 2){// if Boss
+        switch(infos.play_id){
+            case 0:
+                infos.character = consts.Dr_White_char;
+                infos.team = "doctor";
+                break;
+            case 1:
+                infos.character = consts.R_Virus_char;
+                infos.team = "virus";
+                break;
+        }
         Display.bribe(surs, function(survivors){
             socket.emit("act", "bribe", [infos.play_id, survivors], infos.play_id);
         });
     }
+});
+
+socket.on("bribed", function(boss, team){
+    infos.team = team;
+    Display.message(`You are bribed by ${boss}. Your team is now ${team}`);
+});
+
+socket.on("game", function(){
+    Display.showInfo();
 });
 
 // event listeners

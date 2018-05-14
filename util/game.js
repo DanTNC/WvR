@@ -106,6 +106,7 @@ class Game {
         this.readyN = 0;
         this.next_stage = ()=>{};
         this.characters = CharacterJs.character_set;
+        this.bribe_list = [];
     }
     allready(){
         for (let i = 0; i < this.readyN; i++){
@@ -186,8 +187,12 @@ class Game {
     }
     game_stage(){
         this.stage_start(GAME);
+        for (let bribe_record of this.bribe_list){
+            var survivor = this.players[bribe_record.sur];
+            survivor.socket.emit("bribed", bribe_record.boss, bribe_record.team);
+        }
         for (let i = 0; i < this.num_player; i++){
-            this.players[i].socket.emit("wait", "make the programer work");
+            this.players[i].socket.emit("game");
         }
     }
     register_callbacks(socket){
@@ -221,10 +226,12 @@ class Game {
             this.players.push(new Survivor(ply.name, ply.socket, Number(plyidx) + 2));
         }
     }
-    bribe(boss, sur){
+    bribe(boss_, sur){
         var survivor = this.players[sur];
+        var boss = this.players[boss_];
         if(survivor.team == ""){
             survivor.team = boss.team;
+            this.bribe_list.push({boss:boss.character.CHname, team:boss.team, sur:sur})
         }
     }
     doAct(op, params, play){
@@ -276,6 +283,7 @@ class Dr_White extends Boss {
     constructor(name, socket, id){
         super(name, socket, id);
         this.team = "doctor";
+        this.character = {CHname: "Dr. White", ENname: "Dr. White"};
     }
 }
 
@@ -283,6 +291,7 @@ class R_Virus extends Boss {
     constructor(name, socket, id){
         super(name, socket, id);
         this.team = "virus";
+        this.character = {CHname: "R 病毒", ENname: "R virus"};
     }
 }
 

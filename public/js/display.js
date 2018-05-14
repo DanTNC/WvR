@@ -1,4 +1,4 @@
-/* global $ */
+/* global $ infos */
 var r_option = {
     speed : 10,
     duration : 3,
@@ -42,6 +42,7 @@ var Display = new function(){
             var choice = Number($(this).data("char"));
             callback(chars[choice]);
             $("body").html("You have chosen " + chars[choice].CHname);
+            infos.character = chars[choice];
         });
     };
     this.bribe = (surs, callback) => {
@@ -60,6 +61,21 @@ var Display = new function(){
                 callback(bribed_surs);
             }
         });
+    };
+    this.message = (mes) => {
+        alert(mes);
+    };
+    this.showInfo = () => {
+        var tempInfo = Object.assign({}, infos);
+        delete tempInfo.game_id;
+        delete tempInfo.play_id;
+        var character = tempInfo.character;
+        delete tempInfo.character;
+        $("body").html("");
+        for (let key in tempInfo){
+            $("body").append(`${key}: ${tempInfo[key]}`).append("<br/>");
+        }
+        $("body").append(`character name: ${character.CHname}/${character.ENname}`).append("<br/>");
     };
     this.createRoom = (callback) => {
         $("#area").html("").append("<label for='num'>number of players</label><input name='num' id='num_player'></input><button id='create'>create</button>");

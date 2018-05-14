@@ -63,9 +63,13 @@ io.on("connection", function(socket){
                     socket.emit('joined');
                     Games[game_id].check_and_start();
                 }catch(err){
-                    console.log(err);
-                    console.error('room', game_id, 'is already full');
-                    socket.emit('fatalerror', 'full room');
+                    if(err == "full"){
+                        console.error('room', game_id, 'is already full');
+                        socket.emit('fatalerror', 'full room');
+                    }else if(err == "name"){
+                        console.error('invalid name', name, 'in room', game_id);
+                        socket.emit('fatalerror', 'invalid name');
+                    }
                 }
             }else{
                 console.error('room', game_id, 'doesn\'t exist');

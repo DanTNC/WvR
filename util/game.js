@@ -201,9 +201,19 @@ class Game {
             self.doAct(op, params, play);
         });
     }
+    invalid_name(name){
+        if(name == "") return true;
+        var names = this.sockets.map(s => s.name);
+        if(names.includes(name)){
+            return true;
+        }
+    }
     join_game(socket, name){
         if(this.sockets.length >= this.num_player){
-            throw true;
+            throw "full";
+        }
+        if(this.invalid_name(name)){
+            throw "name";    
         }
         this.register_callbacks(socket);
         console.log(name, 'join room', this.game_id);

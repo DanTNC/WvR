@@ -77,6 +77,9 @@ var Display = new function(){
         }
         $("body").append(`character name: ${character.CHname}/${character.ENname}`).append("<br/>");
     };
+    this.taketurn = () => {
+        alert("it's my turn!!");
+    };
     this.createRoom = (callback) => {
         $("#area").html("").append("<label for='num'>number of players</label><input name='num' id='num_player'></input><button id='create'>create</button>");
         $("#create").click(function(){

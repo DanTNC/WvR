@@ -60,11 +60,15 @@ socket.on("bribe", function(play_id, surs){
 
 socket.on("bribed", function(boss, team){
     infos.team = team;
-    Display.message(`You are bribed by ${boss}. Your team is now ${team}`);
+    console.log(`You are bribed by ${boss}. Your team is now ${team}`);
 });
 
 socket.on("game", function(){
     Display.showInfo();
+});
+
+socket.on("turn", function(){
+    Display.taketurn();
 });
 
 // event listeners

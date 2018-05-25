@@ -75,13 +75,70 @@ class Core {
     }
 }
 
+class Turns {
+    constructor(list){
+        this.list = list;
+        this.index = 0;
+    }
+    arrange(rule){
+        this.list = rule(this.list);
+        this.index = 0;
+        return this;
+    }
+    next(){
+        return this.get_nth_from_here(1);
+    }
+    previous(){
+        return this.get_nth_from_here(-1);
+    }
+    current(){
+        return this.get_nth_from_here(0);
+    }
+    get_nth_from_here(nth){
+        var len = this.list.length;
+        this.index = (this.index + len + nth) % len;
+        return this.list[this.index];
+    }
+    give_turn_for(val){
+        var idx = this.list.indexOf(val);
+        if(idx != -1){
+            this.index = idx;
+        }
+        return this;
+    }
+};
+
+var range = (func, start_end, end, incre)=>{// (Despite func) If only 1 arg is given, it's end, but it's start otherwise
+    var start_;
+    var end_;
+    if(end == undefined){
+        start_ = 0;
+        end_ = start_end;
+    }else{
+        start_ = start_end;
+        end_ = end;
+    }
+    var incre_ = incre || 1;
+    if(func){// if a func is given, yield a number at a time.
+        for (let i = start_; i < end_; i+=incre_){
+            func(i);
+        }
+    }else{// return the array of the numbers.
+        var ret = [];
+        for (let i = start_; i < end_; i+=incre_){
+            ret.push(i);
+        }
+        return ret;
+    }
+};
+
 var shuffle = (list)=>{// shuffle a list
     var len = list.length;
     for(let i in list){
         var dest = Math.floor(Math.random() * len);
         list[dest] = [list[i], list[i] = list[dest]][0];
     }
-}
+};
 
 class Game {
     constructor(num_player, game_id){
@@ -183,6 +240,7 @@ class Game {
         this.get_Boss(first).socket.emit("bribe", (first? 1: 0), this.get_Survivors());
         this.players[(first? 0: 1)].socket.emit("wait", "bribe survivors");
         this.first_bribe = first;
+        this.start_player = (first? 0: 1);
         this.wait_for(this.game_stage, BOSSES);
     }
     game_stage(){
@@ -194,6 +252,20 @@ class Game {
         for (let i = 0; i < this.num_player; i++){
             this.players[i].socket.emit("game");
         }
+        this.turns = new Turns(range(undefined, this.num_player));
+        this.players[this.turns.arrange(function(list){
+            var half = Math.round((list.length-2)/2);
+            var bosses = list.slice(0, BOSSES);
+            var survivors = list.slice(BOSSES);
+            shuffle(bosses);
+            shuffle(survivors);
+            survivors.splice(0, 0, bosses[0]);
+            survivors.splice(half+1, 0, bosses[1]);
+            return survivors;
+        }).give_turn_for(this.start_player).current()].socket.emit("turn");
+    }
+    ongoing(){
+        return true;
     }
     register_callbacks(socket){
         var self = this;

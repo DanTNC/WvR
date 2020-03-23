@@ -328,6 +328,7 @@ class Player {
         this.socket = socket;
         this.character = undefined;
         this.id = id;
+        this.sources = {"dose": 0, "virus": 0};
     }
     win(){
         

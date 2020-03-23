@@ -64,10 +64,16 @@ socket.on("bribed", function(boss, team){
 });
 
 socket.on("game", function(){
+    infos.sources = {"dose": 0, "virus": 0};
     Display.showInfo();
 });
 
 socket.on("turn", function(){
+    socket.emit("get_source", infos.play_id);
+});
+
+socket.on("got_source", function(sources){
+    infos.sources = sources;
     Display.taketurn();
 });
 

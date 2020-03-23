@@ -1,4 +1,4 @@
-/* global $ infos */
+/* global $ infos consts */
 var r_option = {
     speed : 10,
     duration : 3,
@@ -78,7 +78,12 @@ var Display = new function(){
         $("body").append(`character name: ${character.CHname}/${character.ENname}`).append("<br/>");
     };
     this.taketurn = () => {
-        alert("it's my turn!!");
+        for (let opt of consts.option){
+            $("body").append(`<button class='opt' id='${opt}'>${opt}</button>`);
+        }
+        $(".opt").click(function(){
+            $(this).attr("id");//TODO does something for options
+        });
     };
     this.createRoom = (callback) => {
         $("#area").html("").append("<label for='num'>number of players</label><input name='num' id='num_player'></input><button id='create'>create</button>");
